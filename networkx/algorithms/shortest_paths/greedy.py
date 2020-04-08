@@ -1,4 +1,4 @@
-"""Shortest paths and path lengths using the BFS algorithm.
+"""Shortest paths and path lengths using Greedy Best-First algorithm.
 """
 from heapq import heappush, heappop
 from itertools import count
@@ -56,33 +56,34 @@ def greedy_path(G, source, target, heuristic=None, weight='weight'):
                 continue
 
             # Skip bad paths that were enqueued before finding a better one
-            qcost, h = enqueued[curnode]
-            if qcost < dist:
+            queue_cost, h = enqueued[curnode]
+            if queue_cost < dist:
                 continue
 
         explored[curnode] = parent
 
         for neighbor, w in G[curnode].items():
-            ncost = dist
+            node_cost = dist
             if neighbor in enqueued:
-                qcost, h = enqueued[neighbor]
-                # if qcost <= ncost, a less costly path from the
+                queue_cost, h = enqueued[neighbor]
+                # if queue_cost <= node_cost, a less costly path from the
                 # neighbor to the source was already determined.
                 # Therefore, we won't attempt to push this neighbor
                 # to the queue
-                if qcost <= ncost:
+                if queue_cost <= node_cost:
                     continue
             else:
                 h = heuristic(neighbor, target)
-            enqueued[neighbor] = ncost, h
-            push(queue, (ncost + h, next(c), neighbor, ncost, curnode))
+            enqueued[neighbor] = node_cost, h
+            push(queue, (node_cost + h, next(c), neighbor, node_cost, curnode))
 
     raise nx.NetworkXNoPath(f"Node {target} not reachable from {source}")
 
 
 def greedy_path_length(G, source, target, heuristic=None, weight='weight'):
+
     """Returns the length of the shortest path between source and target using
-    the A* ("A-star") algorithm.
+    the Greedy Best First algorithm.
 
     Parameters
     ----------
@@ -106,7 +107,7 @@ def greedy_path_length(G, source, target, heuristic=None, weight='weight'):
 
     See Also
     --------
-    astar_path
+    gready_path
 
     """
     if source not in G or target not in G:
