@@ -10,6 +10,7 @@ __all__ = ['greedy_path', 'greedy_path_length']
 
 
 def greedy_path(G, source, target, heuristic=None, weight='weight'):
+
     if source not in G or target not in G:
         msg = f"Either source {source} or target {target} is not in G"
         raise nx.NodeNotFound(msg)
@@ -27,6 +28,7 @@ def greedy_path(G, source, target, heuristic=None, weight='weight'):
     # Add a counter to the queue to prevent the underlying heap from
     # attempting to compare the nodes themselves. The hash breaks ties in the
     # priority and is guaranteed unique for all nodes in the graph.
+
     c = count()
     queue = [(0, next(c), source, 0, None)]
 
@@ -34,6 +36,7 @@ def greedy_path(G, source, target, heuristic=None, weight='weight'):
     # computed heuristics to target. We avoid computing the heuristics
     # more than once and inserting the node into the queue too many times.
     enqueued = {}
+
     # Maps explored nodes to parent closest to the source.
     explored = {}
 
@@ -107,7 +110,7 @@ def greedy_path_length(G, source, target, heuristic=None, weight='weight'):
 
     See Also
     --------
-    gready_path
+    greedy_path
 
     """
     if source not in G or target not in G:
