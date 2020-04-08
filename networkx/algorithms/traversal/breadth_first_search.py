@@ -66,6 +66,12 @@ def generic_bfs_edges(G, source, neighbors=None, depth_limit=None):
         parent, depth_now, children = queue[0]
         try:
             child = next(children)
+
+            # Print evaluated node, besides the fact if it is in visited or not
+            # There will be repetition caused by neighbors(child)
+
+            print("Node evaluated: " + child)
+
             if child not in visited:
                 yield parent, child
                 visited.add(child)
@@ -146,6 +152,7 @@ def bfs_edges(G, source, reverse=False, depth_limit=None):
         successors = G.predecessors
     else:
         successors = G.neighbors
+
     yield from generic_bfs_edges(G, source, successors, depth_limit)
 
 
@@ -256,7 +263,7 @@ def bfs_predecessors(G, source, depth_limit=None):
     edge_bfs
     """
     for s, t in bfs_edges(G, source, depth_limit=depth_limit):
-        yield (t, s)
+        yield t, s
 
 
 def bfs_successors(G, source, depth_limit=None):
@@ -315,10 +322,10 @@ def bfs_successors(G, source, depth_limit=None):
         if p == parent:
             children.append(c)
             continue
-        yield (parent, children)
+        yield parent, children
         children = [c]
         parent = p
-    yield (parent, children)
+    yield parent, children
 
 
 def descendants_at_distance(G, source, distance):
