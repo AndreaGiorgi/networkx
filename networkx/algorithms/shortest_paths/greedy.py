@@ -1,4 +1,4 @@
-"""Shortest paths and path lengths using Greedy Best-First algorithm.
+"""Shortest paths and path lengths using Greedy Best First algorithm.
 """
 from heapq import heappush, heappop
 from itertools import count
@@ -11,6 +11,40 @@ __all__ = ['greedy_path', 'greedy_path_length']
 
 def greedy_path(G, source, target, heuristic=None, weight='weight'):
 
+    """Returns a list of nodes in a shortest path between source and target
+    using the Greedy Best First algorithm.
+
+    There may be more than one shortest path.  This returns only one.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    source : node
+       Starting node for path
+
+    target : node
+       Ending node for path
+
+    heuristic : function
+       A function to evaluate the estimate of the distance
+       from the a node to the target.  The function takes
+       two nodes arguments and must return a number.
+
+    weight: string, optional (default='weight')
+       Edge data key corresponding to the edge weight.
+       Weight data are not used here, since greedy algorithm uses as function values only heuristic ones
+
+    Raises
+    ------
+    NetworkXNoPath
+        If no path exists between source and target.
+
+    See Also
+    --------
+    shortest_path, dijkstra_path
+
+    """
     if source not in G or target not in G:
         msg = f"Either source {source} or target {target} is not in G"
         raise nx.NodeNotFound(msg)
@@ -65,7 +99,9 @@ def greedy_path(G, source, target, heuristic=None, weight='weight'):
 
         explored[curnode] = parent
 
-        for neighbor, w in G[curnode].items():
+        # The variable ___ is used as "storage" for edge weight, which is not used here
+
+        for neighbor, ___ in G[curnode].items():
             node_cost = dist
             if neighbor in enqueued:
                 queue_cost, h = enqueued[neighbor]
