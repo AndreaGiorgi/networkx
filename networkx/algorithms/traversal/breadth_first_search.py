@@ -67,8 +67,9 @@ def generic_bfs_edges(G, source, neighbors=None, depth_limit=None):
         try:
             child = next(children)
 
-            # Print evaluated node, besides the fact if it is in visited or not
-            # There will be repetition caused by neighbors(child)
+            # Print evaluated node, besides the fact if it will be visited or not
+            # There will be repetition caused by neighbors(child), which pushes in queue also the parent node
+            # in depth - 1. That is why we have repetition of the source node.
 
             print("Node evaluated: " + child)
 
@@ -153,7 +154,8 @@ def bfs_edges(G, source, reverse=False, depth_limit=None):
     else:
         successors = G.neighbors
 
-    yield from generic_bfs_edges(G, source, successors, depth_limit)
+    for e in generic_bfs_edges(G, source, successors, depth_limit):
+        yield e
 
 
 def bfs_tree(G, source, reverse=False, depth_limit=None):
