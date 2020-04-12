@@ -10,7 +10,7 @@ from networkx.algorithms.shortest_paths.weighted import _weight_function
 __all__ = ['beam_path', 'beam_path_length']
 
 
-def beam_path(G, source, target, heuristic=None, weight='weight'):
+def beam_path(G, source, target, heuristic, weight='weight'):
     """Returns a list of nodes in a shortest path between source and target
     using the Greedy Best First algorithm.
 
@@ -49,13 +49,9 @@ def beam_path(G, source, target, heuristic=None, weight='weight'):
         msg = f"Either source {source} or target {target} is not in G"
         raise nx.NodeNotFound(msg)
 
-    if heuristic is None:
-        # The default heuristic is h=0 - same as Dijkstra's algorithm
-        def heuristic(u, v):
-            return 0
-
     push = heappush
     pop = heappop
+    weight = _weight_function(G, weight)
 
     # The queue stores priority, node, cost to reach, and parent.
     # Uses Python heapq to keep in priority order.
@@ -74,19 +70,21 @@ def beam_path(G, source, target, heuristic=None, weight='weight'):
     # Maps explored nodes to parent closest to the source.
     explored = {}
 
-    # Maps path found to its cost
-    beampath = {}
-
-    # Stack for each node, used for explore different path
-    stack = []
+    # Boolean used for memorize if a path was already found
+    found = 0
+    beampath = []
 
     # best_path returns the best one based on each total weight
     def best_path(path1, path2):
-        return min(sum(weight(u, v, G[u][v]) for u, v in zip(path1[:-1], path1[1:])),
-                   sum(weight(u, v, G[u][v]) for u, v in zip(path2[:-1], path2[1:])))
+        cost1 = sum(weight(u, n, G[u][n]) for u, n in zip(path1[:-1], path1[1:]))
+        cost2 = sum(weight(u, n, G[u][n]) for u, n in zip(path2[:-1], path2[1:]))
+        if cost1 == min(cost1, cost2):
+            return path1
+        else:
+            return path2
 
-    def successors(v):
-        return iter(sorted(G.neighbors(v), key=heuristic, reverse=True)[:2])
+    def successors(n):
+        return iter(sorted(G.neighbors(n), key=heuristic, reverse=True)[:2])
 
     while queue:
         # Pop the smallest item from queue.
@@ -97,15 +95,15 @@ def beam_path(G, source, target, heuristic=None, weight='weight'):
             node = parent
             while node is not None:
                 path.append(node)
+                print(node)
                 node = explored[node]
             path.reverse()
-            if target in beampath:
-                best = best_path(path, beampath[target])
-                beampath[target] = best
-                print(path)
+            if found:
+                best = best_path(path, beampath)
+                beampath = best
             else:
-                beampath[target] = path
-                print(path)
+                found = 1
+                beampath = path
 
         if curnode in explored:
             # Do not override the parent of starting node
@@ -119,23 +117,27 @@ def beam_path(G, source, target, heuristic=None, weight='weight'):
 
         explored[curnode] = parent
 
-        for neighbor in successors(curnode):
-            print((list(successors(curnode))))
-            node_cost = dist
-            if neighbor in enqueued:
-                queue_cost, h = enqueued[neighbor]
-                # if queue_cost <= node_cost, a less costly path from the
-                # neighbor to the source was already determined.
-                # Therefore, we won't attempt to push this neighbor
-                # to the queue
-                if queue_cost <= node_cost:
-                    continue
-            else:
-                h = heuristic(target)
-            enqueued[neighbor] = node_cost, h
-            push(queue, (node_cost + h, next(c), neighbor, node_cost, curnode))
+    # TODO: Aggiungere STACK managment, uno stack per nodo, si esplora lo stack e si passa al nodo successivo
 
-    raise nx.NetworkXNoPath(f"Node {target} not reachable from {source}")
+        print("Nodo corrente: " + curnode)
+        for v in successors(curnode):
+            print("Nodo successore: " + v)
+            for neighbor, w in G[v].items():
+                print("Nodo vicino: " + neighbor)
+                node_cost = dist + weight(curnode, neighbor, w)
+                if neighbor in enqueued:
+                    queue_cost, h = enqueued[neighbor]
+                    if queue_cost <= node_cost:
+                        continue
+                else:
+                    h = heuristic(target)
+                enqueued[neighbor] = node_cost, h
+                push(queue, (node_cost + h, next(c), neighbor, node_cost, curnode))
+
+    if beampath is None:
+        raise nx.NetworkXNoPath(f"Node {target} not reachable from {source}")
+    else:
+        return beampath
 
 
 def beam_path_length(G, source, target, heuristic=None, weight='weight'):
@@ -163,8 +165,7 @@ def beam_path_length(G, source, target, heuristic=None, weight='weight'):
         If no path exists between source and target.
 
     See Also
-    --------
-    astar_path
+    -------
 
     """
     if source not in G or target not in G:
